@@ -23,12 +23,6 @@ class EdgeTable:
                 arestas_ordenadas.pop(0)
                 
             else:
-                i += 1 
-        print('Terminei de preencher a ET')
-        print(self.linhas_de_varredura)
-        
-        for j in range(600):
-            if self.linhas_de_varredura[j] != []:
-                print(j)  
+                i += 1  
             
             
