@@ -7,9 +7,6 @@ from Ponto import Ponto
 from Aresta import Aresta
 from Edgetable import EdgeTable
 
-# --- Bloco de Constantes ---
-# Define valores fixos para facilitar a manutenção do código.
-
 # Dimensões da janela
 TAMANHO_TELA = 600
 

@@ -1,5 +1,3 @@
-# Aresta.py (CORRIGIDO)
-
 from Ponto import Ponto
 
 class Aresta:
