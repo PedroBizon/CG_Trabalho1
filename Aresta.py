@@ -2,10 +2,14 @@ from Ponto import Ponto
 
 class Aresta:
     def __init__(self, ponto1: Ponto, ponto2: Ponto):
+        self.ponto1 = ponto1
+        self.ponto2 = ponto2
         self.y_max = max(ponto1.y, ponto2.y)
+        self.y_min = min(ponto1.y, ponto2.y)
         
         if min(ponto1.y, ponto2.y) == ponto1.y:
             self.x_min = ponto1.x
+            
         else:
             self.x_min = ponto2.x
             

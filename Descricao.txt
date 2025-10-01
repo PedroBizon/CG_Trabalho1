@@ -9,10 +9,10 @@ Arquivos:
 
 
 Ideia geral do algoritmo:
-    1 - Pegamos os pontos pelos cliques na tela; (FEITO - Acho)
-    2 - Dos pontos, nós pegamos as arestsa; (FEITO - Acho)
-    3 - Inicializamos a ET e AET (são a mesma estrutura de dados) (Feito)
-    4 - Preenchemos a ET de acordo com as arestas;
+    1 - Pegamos os pontos pelos cliques na tela; (FEITO)
+    2 - Dos pontos, nós pegamos as arestsa; (FEITO)
+    3 - Inicializamos a ET e AET (são a mesma estrutura de dados) (FEITO)
+    4 - Preenchemos a ET de acordo com as arestas; (FEITO)
     5 - Fazemos o algoritmo de preenchimento em si;
     6 - Pensar na lógica do usuário, com botões, etc;
 

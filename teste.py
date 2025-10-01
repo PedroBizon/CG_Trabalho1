@@ -7,7 +7,7 @@ from Aresta import Aresta
 from Edgetable import EdgeTable
 
 # Constantes
-TAMANHO_TELA = 800
+TAMANHO_TELA = 600
 BRANCO = (1.0, 1.0, 1.0)
 PRETO = (0.0, 0.0, 0.0) 
 VERMELHO = (1.0, 0.0, 0.0)
@@ -41,6 +41,7 @@ def criar_arestas():
     nova_aresta = Aresta(pontos[0], pontos[-1])
     arestas.append(nova_aresta)
     n_arestas = n_pontos
+
         
 def display():
     ''' Função principal de desenho '''
@@ -110,7 +111,7 @@ def mouse_click(botao, estado, x, y):
             aet = EdgeTable(n_arestas, TAMANHO_TELA)
             
             # Preencher ET
-            
+            et.preencher_ET(arestas)
             
             # Preenchimento do polígono em si
             
