@@ -1,29 +1,28 @@
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from OpenGL.GLUT import * 
+import OpenGL.GLUT as GLUT 
 from math import * 
 from Ponto import Ponto
 from Aresta import Aresta
 from Edgetable import EdgeTable
 
 # Constantes
-    # Cores
 TAMANHO_TELA = 600
 BRANCO = (1.0, 1.0, 1.0)
 PRETO = (0.0, 0.0, 0.0) 
 VERMELHO = (1.0, 0.0, 0.0)
 VERDE = (0.0, 1.0, 0.0)
 AZUL = (0.0, 0.0, 1.0)
-CORES_POLIGONO = [BRANCO, VERMELHO, VERDE, AZUL, PRETO]
+CORES_POLIGONO = [VERMELHO, VERDE, AZUL, BRANCO, PRETO]
+CORES_FUNDO = [BRANCO, PRETO, (0.5, 0.5, 0.5), (0.1, 0.1, 0.3)]
 
-
-    # Botões
+# Botões
 LARGURA_BOTAO = 120
 ALTURA_BOTAO = 30
 MARGEM_SUPERIOR = 20
 MARGEM_ESQUERDA = 20
 
-# Variáveis Globais - mal necessário para usar as funções do OpenGL 
+# Variáveis Globais de Estado
 pontos = []
 n_pontos = 0
 coletando_pontos = True
@@ -31,43 +30,49 @@ coletando_pontos = True
 arestas = []
 n_arestas = 0
 
-indice_cor_atual = 0
+indice_cor_poligono = 0
+indice_cor_fundo = 0
 
-# Funções:
-# ... (após mouse_click ou onde preferir) ...
+### ADICIONADO: Variáveis de controle para o ciclo de renderização
+poligono_pronto_para_preencher = False
 
-def desenhar_arestas(espessura):
-    ''' Desenha as arestas do polígono usando GL_LINES. '''
-    global pontos
+def desenhar_texto(texto, x, y):
+    glWindowPos2f(x, y)
+    for char in texto:
+        GLUT.glutBitmapCharacter(GLUT.GLUT_BITMAP_HELVETICA_12, ord(char))
+
+def criar_arestas():
+    global pontos, n_pontos, arestas, n_arestas
+    arestas.clear()
+    if n_pontos < 3: return
     
-    if len(pontos) < 2:
-        return
+    for i in range(n_pontos):
+        p1 = pontos[i]
+        p2 = pontos[(i + 1) % n_pontos]
+        nova_aresta = Aresta(p1, p2)
+        if nova_aresta.inverso_m != 0.0: 
+            arestas.append(nova_aresta)
+    n_arestas = len(arestas)
+
+def desenhar_arestas(espessura: float):
+    global pontos, indice_cor_poligono, CORES_POLIGONO
+    if len(pontos) < 2: return
     
-    glColor3f(*CORES_POLIGONO[indice_cor_atual]) 
+    cor_borda = PRETO if CORES_POLIGONO[indice_cor_poligono] != PRETO else BRANCO
+    glColor3f(*cor_borda) 
     glLineWidth(espessura)
-    
     glBegin(GL_LINES)
-    # Itera sobre os pontos, conectando cada um ao seu sucessor
     for i in range(len(pontos)):
         p1 = pontos[i]
-        # Ponto 2 é o próximo, usando o operador % para fechar o polígono (conecta o último ao primeiro)
         p2 = pontos[(i + 1) % len(pontos)] 
-        
-        # Desenha a aresta (linha) entre p1 e p2
         glVertex2f(p1.x, p1.y)
         glVertex2f(p2.x, p2.y)
-        
     glEnd()
 
-
 def desenhar_botoes():
-    ''' Desenha a aparência visual dos botões na tela '''
-    
     # --- Botão Limpar ---
     x_limpar = MARGEM_ESQUERDA
     y_limpar = TAMANHO_TELA - MARGEM_SUPERIOR - ALTURA_BOTAO
-    
-    # Desenha o retângulo do botão (ex: cor cinza claro)
     glColor3f(0.7, 0.7, 0.7)
     glBegin(GL_QUADS)
     glVertex2f(x_limpar, y_limpar)
@@ -75,180 +80,195 @@ def desenhar_botoes():
     glVertex2f(x_limpar + LARGURA_BOTAO, y_limpar + ALTURA_BOTAO)
     glVertex2f(x_limpar, y_limpar + ALTURA_BOTAO)
     glEnd()
-    
-    # Adiciona a cor do texto (Preto)
     glColor3f(*PRETO)
-    # Desenha o texto "Limpar" (Necessita de uma função auxiliar para texto)
     desenhar_texto("Limpar Tela", x_limpar + 10, y_limpar + 10)
-
-
-    # --- Botão Cor ---
-    x_cor = MARGEM_ESQUERDA + LARGURA_BOTAO + 20 # 20px de espaço
-    y_cor = TAMANHO_TELA - MARGEM_SUPERIOR - ALTURA_BOTAO
-    
-    # Desenha o retângulo do botão (ex: cor ligeiramente diferente)
+    # --- Botão Cor Polígono ---
+    x_cor_poligono = MARGEM_ESQUERDA + LARGURA_BOTAO + 20 
+    y_cor_poligono = TAMANHO_TELA - MARGEM_SUPERIOR - ALTURA_BOTAO
     glColor3f(0.8, 0.8, 0.8)
     glBegin(GL_QUADS)
-    glVertex2f(x_cor, y_cor)
-    glVertex2f(x_cor + LARGURA_BOTAO, y_cor)
-    glVertex2f(x_cor + LARGURA_BOTAO, y_cor + ALTURA_BOTAO)
-    glVertex2f(x_cor, y_cor + ALTURA_BOTAO)
+    glVertex2f(x_cor_poligono, y_cor_poligono)
+    glVertex2f(x_cor_poligono + LARGURA_BOTAO, y_cor_poligono)
+    glVertex2f(x_cor_poligono + LARGURA_BOTAO, y_cor_poligono + ALTURA_BOTAO)
+    glVertex2f(x_cor_poligono, y_cor_poligono + ALTURA_BOTAO)
     glEnd()
-
-    # Adiciona a cor do texto (Preto)
     glColor3f(*PRETO)
-    # Desenha o texto "Mudar Cor"
-    desenhar_texto("Mudar Cor", x_cor + 10, y_cor + 10)
+    desenhar_texto("Mudar Cor", x_cor_poligono + 10, y_cor_poligono + 10)
+    # --- Botão Cor Fundo ---
+    x_fundo = x_cor_poligono + LARGURA_BOTAO + 20 
+    y_fundo = TAMANHO_TELA - MARGEM_SUPERIOR - ALTURA_BOTAO
+    glColor3f(0.6, 0.9, 0.6) 
+    glBegin(GL_QUADS)
+    glVertex2f(x_fundo, y_fundo)
+    glVertex2f(x_fundo + LARGURA_BOTAO, y_fundo)
+    glVertex2f(x_fundo + LARGURA_BOTAO, y_fundo + ALTURA_BOTAO)
+    glVertex2f(x_fundo, y_fundo + ALTURA_BOTAO)
+    glEnd()
+    glColor3f(*PRETO)
+    desenhar_texto("Mudar Fundo", x_fundo + 10, y_fundo + 10)
+
+def preencher_poligono_scanline(et: EdgeTable):
+    AET = []
+    y_start = 0
+    for i, linha in enumerate(et.linhas_de_varredura):
+        if linha:
+            y_start = i 
+            break
     
-    # Restaura a cor de desenho (opcional)
-    glColor3f(*PRETO) 
+    y = y_start
+    cor_preenchimento = CORES_POLIGONO[indice_cor_poligono]
+    
+    # O laço só precisa continuar enquanto houver arestas na ET ou AET
+    while AET or any(et.linhas_de_varredura[y:] if y < TAMANHO_TELA else []):
+        if y >= TAMANHO_TELA: break # Segurança
 
-def desenhar_texto(texto, x, y):
-    ''' Função auxiliar para desenhar texto 2D com GLUT '''
-    glWindowPos2f(x, y)
-    for char in texto:
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, ord(char))
-
-def criar_arestas():
-    ''' Pega todos os pontos coletados da lista pontos e faz arestas com eles, na ordem em que estiverem.
-        Além disso, une o último ponto ao primeiro. A criação das arestas é simplesmente a criação dos objetos
-        Aresta que contém as informações relevantes para as Edge Tables'''
-    global pontos
-    global n_pontos
-    global arestas
-    global n_arestas
-     
-    for i in range(n_pontos - 1):
-        nova_aresta = Aresta(pontos[i], pontos[i+1])
-        arestas.append(nova_aresta)
+        # 1. Mover da ET para a AET
+        if y < len(et.linhas_de_varredura) and et.linhas_de_varredura[y]:
+            for aresta in et.linhas_de_varredura[y]:
+                # IMPORTANTE: Reseta o current_x para o valor inicial da aresta
+                aresta.current_x = aresta.x_min
+                AET.append(aresta)
         
-    nova_aresta = Aresta(pontos[0], pontos[-1])
-    arestas.append(nova_aresta)
-    n_arestas = n_pontos
+        AET.sort(key=lambda a: a.current_x)
 
-        
-# main.py
+        # 2. Desenhar os spans da scanline atual
+        if len(AET) >= 2:
+            glColor3f(*cor_preenchimento)
+            glBegin(GL_LINES) 
+            for i in range(0, len(AET) - 1, 2):
+                x_inicio = int(round(AET[i].current_x))
+                x_fim = int(round(AET[i+1].current_x))
+                if x_inicio < x_fim:
+                    glVertex2f(x_inicio, y)
+                    glVertex2f(x_fim, y)
+            glEnd()
+
+        # 3. Remover arestas que terminam na linha atual
+        AET = [aresta for aresta in AET if int(round(aresta.y_max)) > y]
+
+        # 4. Incrementar y e atualizar x para a PRÓXIMA linha
+        y += 1
+        for aresta in AET:
+            aresta.current_x += aresta.inverso_m
+    
+    # Não precisa de glutPostRedisplay aqui, pois já está no loop de display
+
 def display():
-    ''' Função principal de desenho '''
-    global coletando_pontos
+    global coletando_pontos, poligono_pronto_para_preencher, arestas
     
     glClear(GL_COLOR_BUFFER_BIT)
     
     desenhar_botoes()
     
-    # 1. Desenha os pontos (para feedback visual)
-    glColor3f(*PRETO) # Use PRETO para visualizar os pontos no fundo BRANCO
+    ### ALTERADO: Lógica de desenho
+    # 1. Se o polígono estiver pronto, PREENCHE PRIMEIRO
+    if poligono_pronto_para_preencher:
+        # Recria a ET a cada frame para garantir que o estado (current_x) está limpo
+        et_para_desenho = EdgeTable(len(arestas), TAMANHO_TELA)
+        et_para_desenho.preencher_ET(arestas)
+        preencher_poligono_scanline(et_para_desenho)
+    
+    # 2. Desenha os pontos (para feedback visual durante a coleta)
+    cor_ponto = BRANCO if CORES_FUNDO[indice_cor_fundo] == PRETO else PRETO
+    glColor3f(*cor_ponto) 
     glPointSize(5.0) 
     glBegin(GL_POINTS)
     for p in pontos:
         glVertex2f(p.x, p.y) 
     glEnd()
     
-    # 2. Desenha o polígono APENAS se a coleta terminou
+    # 3. Desenha a borda do polígono POR CIMA do preenchimento
     if not coletando_pontos:
-        desenhar_arestas(4.0) # Espessura de 4.0
+        desenhar_arestas(3.0)
     
     glFlush()
     
 def reshape(largura: int, altura: int):
-    ''' Função para alterar as coordenadas do OpenGL e deixar como nós estamos acostumados
-        em Geometria Analítica e afins'''
-        
     glViewport(0, 0, largura, altura)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    
     gluOrtho2D(0, largura, 0, altura)
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
     
-
 def mouse_click(botao, estado, x, y):
-    ''' Função de callback para eventos de clique de mouse e botões '''
-    global pontos, n_pontos, coletando_pontos, arestas, n_arestas, indice_cor_atual
+    global pontos, n_pontos, coletando_pontos, arestas, n_arestas, indice_cor_poligono, indice_cor_fundo
+    ### ADICIONADO: Acesso à nova flag
+    global poligono_pronto_para_preencher
     
     y_real = TAMANHO_TELA - y
     
-    if botao == GLUT_LEFT_BUTTON and estado == GLUT_DOWN:
+    if botao == GLUT.GLUT_LEFT_BUTTON and estado == GLUT.GLUT_DOWN:
+        # --- LÓGICA DE BOTÕES ---
+        x_limpar = MARGEM_ESQUERDA; y_limpar = TAMANHO_TELA - MARGEM_SUPERIOR - ALTURA_BOTAO
+        x_cor = MARGEM_ESQUERDA + LARGURA_BOTAO + 20; y_cor = y_limpar
+        x_fundo = x_cor + LARGURA_BOTAO + 20; y_fundo = y_limpar
         
-        # ------------------------------------
-        # 1. LÓGICA DE CLIQUE NOS BOTÕES
-        # ------------------------------------
-        x_limpar = MARGEM_ESQUERDA
-        y_limpar = TAMANHO_TELA - MARGEM_SUPERIOR - ALTURA_BOTAO
-        x_cor = MARGEM_ESQUERDA + LARGURA_BOTAO + 20
-        y_cor = TAMANHO_TELA - MARGEM_SUPERIOR - ALTURA_BOTAO
-        
-        # Verifica clique no botão LIMPAR
-        if (x >= x_limpar and x <= x_limpar + LARGURA_BOTAO and 
-            y_real >= y_limpar and y_real <= y_limpar + ALTURA_BOTAO):
-            
-            # Executa a ação do botão Limpar
-            pontos.clear()
-            arestas.clear()
-            n_pontos = 0
-            n_arestas = 0
-            coletando_pontos = True # Volta ao estado de coleta
+        # Botão LIMPAR
+        if (x_limpar <= x <= x_limpar + LARGURA_BOTAO and y_limpar <= y_real <= y_limpar + ALTURA_BOTAO):
+            pontos.clear(); arestas.clear()
+            n_pontos = 0; n_arestas = 0
+            coletando_pontos = True
+            poligono_pronto_para_preencher = False ### ADICIONADO: Reseta a flag
             print("--- Tela Limpa. Coleta Reiniciada. ---")
-            glutPostRedisplay()
-            return # Sai da função para não processar como clique normal
+            GLUT.glutPostRedisplay()
+            return
         
-        # Verifica clique no botão MUDAR COR
-        if (x >= x_cor and x <= x_cor + LARGURA_BOTAO and 
-            y_real >= y_cor and y_real <= y_cor + ALTURA_BOTAO):
+        # Botão MUDAR COR
+        if (x_cor <= x <= x_cor + LARGURA_BOTAO and y_cor <= y_real <= y_cor + ALTURA_BOTAO):
+            indice_cor_poligono = (indice_cor_poligono + 1) % len(CORES_POLIGONO)
+            print(f"--- Cor do Polígono Alterada para: {CORES_POLIGONO[indice_cor_poligono]} ---")
+            # Apenas solicita um redesenho, o display loop fará o resto com a nova cor
+            GLUT.glutPostRedisplay()
+            return
+        
+        # Botão MUDAR FUNDO
+        if (x_fundo <= x <= x_fundo + LARGURA_BOTAO and y_fundo <= y_real <= y_fundo + ALTURA_BOTAO):
+            indice_cor_fundo = (indice_cor_fundo + 1) % len(CORES_FUNDO)
+            cor = CORES_FUNDO[indice_cor_fundo]
+            glClearColor(cor[0], cor[1], cor[2], 1.0)
+            print(f"--- Cor de Fundo Alterada para: {cor} ---")
+            GLUT.glutPostRedisplay()
+            return
             
-            # Executa a ação do botão Mudar Cor
-            indice_cor_atual = (indice_cor_atual + 1) % len(CORES_POLIGONO)
-            print(f"--- Cor do Polígono Alterada para: {CORES_POLIGONO[indice_cor_atual]} ---")
-            glutPostRedisplay()
-            return # Sai da função para não processar como clique normal
-            
-        # ------------------------------------
-        # 2. LÓGICA DE COLETA DE PONTOS
-        # ------------------------------------
+        # --- LÓGICA DE COLETA DE PONTOS ---
         if coletando_pontos:
-            ponto = Ponto(x, y_real)
-            pontos.append(ponto)
+            pontos.append(Ponto(x, y_real))
             n_pontos += 1
+            print(f'Ponto {n_pontos}: ({x}, {y_real})')
+            GLUT.glutPostRedisplay()
+    
+    if botao == GLUT.GLUT_RIGHT_BUTTON and estado == GLUT.GLUT_DOWN:
+        if coletando_pontos and n_pontos >= 3:
+            coletando_pontos = False
+            print("Fim da coleta de pontos. Polígono pronto para preenchimento.")
             
-            print(f'Ponto {len(pontos)}: ({pontos[-1].x}, {pontos[-1].y})')
-            glutPostRedisplay()
-        
-    
-    # ... (o resto da lógica de botão direito e if not coletando_pontos é mantida) ...
-    if botao == GLUT_RIGHT_BUTTON and estado == GLUT_DOWN:
-        # Sua lógica de fim de coleta aqui:
-        if coletando_pontos:
-             # ... (cria arestas, inicializa ET, etc.) ...
-             coletando_pontos = False
-             glutPostRedisplay()
-             
-    elif not coletando_pontos:
-        print("Não estou coletando pontos no momento (Polígono Finalizado).")
-        pass
-        
-    
-def main():    
-    global coletando_pontos
-    
-    # Inicialização da tela
-    glutInit()
-    glutInitWindowSize(TAMANHO_TELA, TAMANHO_TELA)
-    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA)
-    glutCreateWindow(b"Preenchimento de Poligonos")
-    
-    # Funções de Callback
-    glutDisplayFunc(display)
-    glutReshapeFunc(reshape)
-    glutMouseFunc(mouse_click)
-    
-        
-    # Loop de eventos
-    glutMainLoop()
-    
-    
-    return 0 
+            ### ALTERADO: Lógica de finalização do polígono
+            # Apenas prepara os dados. Não desenha nada diretamente.
+            criar_arestas()
+            poligono_pronto_para_preencher = True # SINALIZA para o display() desenhar
+            
+            GLUT.glutPostRedisplay() # Solicita o redesenho que fará o preenchimento
 
+        elif n_pontos < 3:
+            print("ERRO: Mínimo de 3 pontos necessários.")
+        else:
+            print("Polígono já finalizado. Limpe a tela para criar um novo.")
+
+def main():
+    GLUT.glutInit()
+    GLUT.glutInitWindowSize(TAMANHO_TELA, TAMANHO_TELA)
+    GLUT.glutInitDisplayMode(GLUT.GLUT_SINGLE | GLUT.GLUT_RGBA)
+    GLUT.glutCreateWindow(b"Preenchimento de Poligonos - Scan-Line (Corrigido)")
+    
+    cor_inicial = CORES_FUNDO[indice_cor_fundo]
+    glClearColor(cor_inicial[0], cor_inicial[1], cor_inicial[2], 1.0)
+    
+    GLUT.glutDisplayFunc(display)
+    GLUT.glutReshapeFunc(reshape)
+    GLUT.glutMouseFunc(mouse_click)
+    
+    GLUT.glutMainLoop()
 
 if __name__ == "__main__":
     main()

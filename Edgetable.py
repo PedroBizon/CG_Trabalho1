@@ -1,30 +1,28 @@
+# EdgeTable.py (CORRIGIDO)
+from Aresta import Aresta
+
 class EdgeTable:
     def __init__(self, n_arestas: int, TAMANHO_TELA):
-        ''' Inicializa EdgeTables, que podem ser tanto ETs quanto AETs'''
+        ''' Inicializa a Edge Table (ET).'''
         self.n_arestas = n_arestas
-        self.linhas_de_varredura = []
-        
-        for i in range(TAMANHO_TELA):
-            self.linhas_de_varredura.append([])
+        # Cria uma lista de "cestos" (buckets), um para cada linha de varredura
+        self.linhas_de_varredura = [[] for _ in range(TAMANHO_TELA)]
             
     def preencher_ET(self, arestas): 
-        ''' Preenche uma ET a partir de uma lista de arestas '''
+        ''' Preenche a ET a partir de uma lista de arestas '''
         
-        # Ordena arestas em y_min crescente e x_min crescente caso empate
-        arestas_ordenadas = sorted(arestas, key=lambda aresta: (aresta.y_min, aresta.x_min))
+        # Itera sobre cada aresta e a insere no cesto correto
+        for aresta in arestas:
+            # Pega o y_min da aresta, arredonda e converte para inteiro
+            # para usá-lo como índice do "cesto".
+            # Isso evita problemas de comparação float == int.
+            indice_y = int(round(aresta.y_min))
+            
+            # Garante que o índice está dentro dos limites da tela
+            if 0 <= indice_y < len(self.linhas_de_varredura):
+                self.linhas_de_varredura[indice_y].append(aresta)
         
-        # Itera por todas as linhas de varredura possíveis
+        # Opcional, mas bom: ordena as arestas dentro de cada cesto pelo x_min
         for i in range(len(self.linhas_de_varredura)):
-            # Processa todas as arestas que começam na linha de varredura atual (i)
-            while arestas_ordenadas and arestas_ordenadas[0].y_min == i:
-                
-                aresta = arestas_ordenadas.pop(0)
-                
-                # Adiciona a aresta à lista correspondente à linha de varredura 'i'
-                self.linhas_de_varredura[i].append(aresta)
-            
-            # Se a lista de arestas a processar estiver vazia, podemos parar
-            if not arestas_ordenadas:
-                break  
-            
-            
+            if self.linhas_de_varredura[i]:
+                self.linhas_de_varredura[i].sort(key=lambda a: (a.x_min, a.inverso_m))
