@@ -1,12 +1,12 @@
 all: 
 	run
 
-run:
+setup:
 	export MUJOCO_GL=glx
 	export PYOPENGL_PLATFORM=glx
+	
+run:
 	python3 main.py
 
 test:
-	export MUJOCO_GL=glx
-	export PYOPENGL_PLATFORM=glx
 	python3 teste.py
