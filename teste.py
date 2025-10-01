@@ -76,6 +76,8 @@ def mouse_click(botao, estado, x, y):
     global pontos
     global n_pontos
     global coletando_pontos
+    global arestas
+    global n_arestas
     
     if coletando_pontos:
         
@@ -97,8 +99,21 @@ def mouse_click(botao, estado, x, y):
                 
             print(n_pontos) 
             coletando_pontos = False
+            
+            
             # Precisamos lembrar de verificar se temos pontos suficientes para desenhar, acho que em outro local seria melhor
+            # Criar arestas
             criar_arestas()
+            
+            # Inicializar ET e AET
+            et = EdgeTable(n_arestas, TAMANHO_TELA)
+            aet = EdgeTable(n_arestas, TAMANHO_TELA)
+            
+            # Preencher ET
+            
+            
+            # Preenchimento do polígono em si
+            
             glutPostRedisplay()
         
     else:
