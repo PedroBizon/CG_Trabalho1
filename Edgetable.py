@@ -8,21 +8,23 @@ class EdgeTable:
             self.linhas_de_varredura.append([])
             
     def preencher_ET(self, arestas): 
-        ''' Preenche uma ET a prtir de uma lista de arestas '''   
+        ''' Preenche uma ET a partir de uma lista de arestas '''
         
-        # Ordena arestas em y crescente e x crescente caso empate
-        arestas_ordenadas = sorted(arestas, key = lambda aresta : (aresta.y_min, aresta.x_min))
+        # Ordena arestas em y_min crescente e x_min crescente caso empate
+        arestas_ordenadas = sorted(arestas, key=lambda aresta: (aresta.y_min, aresta.x_min))
         
-        
-        # Sempre que o indice i for igual a y_min, aquele é o local da aresta
-        i = 0
-        while(arestas_ordenadas):
-            
-            if(arestas_ordenadas[0].y_min == i):
-                self.linhas_de_varredura[i].append(arestas_ordenadas[0])
-                arestas_ordenadas.pop(0)
+        # Itera por todas as linhas de varredura possíveis
+        for i in range(len(self.linhas_de_varredura)):
+            # Processa todas as arestas que começam na linha de varredura atual (i)
+            while arestas_ordenadas and arestas_ordenadas[0].y_min == i:
                 
-            else:
-                i += 1  
+                aresta = arestas_ordenadas.pop(0)
+                
+                # Adiciona a aresta à lista correspondente à linha de varredura 'i'
+                self.linhas_de_varredura[i].append(aresta)
+            
+            # Se a lista de arestas a processar estiver vazia, podemos parar
+            if not arestas_ordenadas:
+                break  
             
             

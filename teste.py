@@ -25,6 +25,31 @@ n_arestas = 0
 
 
 # Funções:
+# ... (após mouse_click ou onde preferir) ...
+
+def desenhar_arestas(espessura):
+    ''' Desenha as arestas do polígono usando GL_LINES. '''
+    global pontos
+    
+    if len(pontos) < 2:
+        return
+    
+    glColor3f(*BRANCO) # Usa VERMELHO para destacar o polígono
+    glLineWidth(espessura)
+    
+    glBegin(GL_LINES)
+    # Itera sobre os pontos, conectando cada um ao seu sucessor
+    for i in range(len(pontos)):
+        p1 = pontos[i]
+        # Ponto 2 é o próximo, usando o operador % para fechar o polígono (conecta o último ao primeiro)
+        p2 = pontos[(i + 1) % len(pontos)] 
+        
+        # Desenha a aresta (linha) entre p1 e p2
+        glVertex2f(p1.x, p1.y)
+        glVertex2f(p2.x, p2.y)
+        
+    glEnd()
+
 def criar_arestas():
     ''' Pega todos os pontos coletados da lista pontos e faz arestas com eles, na ordem em que estiverem.
         Além disso, une o último ponto ao primeiro. A criação das arestas é simplesmente a criação dos objetos
@@ -43,21 +68,25 @@ def criar_arestas():
     n_arestas = n_pontos
 
         
+# main.py
 def display():
     ''' Função principal de desenho '''
     global coletando_pontos
     
     glClear(GL_COLOR_BUFFER_BIT)
     
-    # Desenha os pontos
-    glColor3f(*BRANCO) 
+    # 1. Desenha os pontos (para feedback visual)
+    glColor3f(*PRETO) # Use PRETO para visualizar os pontos no fundo BRANCO
     glPointSize(5.0) 
     glBegin(GL_POINTS)
     for p in pontos:
         glVertex2f(p.x, p.y) 
     glEnd()
-        
-            
+    
+    # 2. Desenha o polígono APENAS se a coleta terminou
+    if not coletando_pontos:
+        desenhar_arestas(4.0) # Espessura de 4.0
+    
     glFlush()
     
 def reshape(largura: int, altura: int):
