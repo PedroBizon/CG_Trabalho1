@@ -8,7 +8,7 @@ from Aresta import Aresta
 from Edgetable import EdgeTable
 
 # Dimensões da janela
-TAMANHO_TELA = 600
+TAMANHO_TELA = 800
 
 # Paleta de cores em formato RGB (normalizado entre 0.0 e 1.0)
 BRANCO = (1.0, 1.0, 1.0)

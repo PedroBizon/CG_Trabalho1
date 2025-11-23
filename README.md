@@ -86,4 +86,4 @@ python3 main.py
 ```
 
 ## Autor
--   Pedro Bizon
+-   Pedro Bizon Dania
